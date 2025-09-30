@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 900px; }
+    header { display: flex; align-items: baseline; gap: 1rem; }
+    form { display: grid; grid-template-columns: 1fr 2fr 150px 120px; gap: 0.5rem; margin: 1rem 0; }
+    input, textarea, button, select { padding: 0.5rem; font-size: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 0.5rem; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 0.5rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.75rem; }
+    .title { font-weight: 600; }
+    .muted { color: #666; }
+    .actions { display: flex; gap: 0.5rem; }
+    .done { text-decoration: line-through; color: #888; }
+  </style>
+  <script>
+    const api = {
+      async list(completed){
+        const url = completed === undefined ? '/api/tasks' : `/api/tasks?completed=${completed}`;
+        const r = await fetch(url); return r.json();
+      },
+      async add(task){
+        const r = await fetch('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(task) });
+        return r.json();
+      },
+      async update(id, task){
+        await fetch(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(task) });
+      },
+      async setStatus(id, isCompleted){
+        await fetch(`/api/tasks/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(isCompleted) });
+      },
+      async remove(id){
+        await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      }
+    };
+
+    async function refresh(){
+      const filter = document.getElementById('filter').value;
+      const completed = filter === 'all' ? undefined : filter === 'done';
+      const items = await api.list(completed);
+      const ul = document.getElementById('list'); ul.innerHTML = '';
+      for(const t of items){
+        const li = document.createElement('li');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.isCompleted; cb.onchange = async () => { await api.setStatus(t.id, cb.checked); await refresh(); };
+        const info = document.createElement('div');
+        const title = document.createElement('div'); title.className = 'title' + (t.isCompleted ? ' done' : ''); title.textContent = t.title;
+        const meta = document.createElement('div'); meta.className = 'muted'; meta.textContent = `${t.description ?? ''}  (срок: ${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'})`;
+        info.appendChild(title); info.appendChild(meta);
+        const actions = document.createElement('div'); actions.className = 'actions';
+        const del = document.createElement('button'); del.textContent = 'Удалить'; del.onclick = async () => { await api.remove(t.id); await refresh(); };
+        actions.appendChild(del);
+        li.appendChild(cb); li.appendChild(info); li.appendChild(actions);
+        ul.appendChild(li);
+      }
+    }
+
+    async function onSubmit(e){
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const dueDate = document.getElementById('dueDate').value;
+      if(!title) return;
+      await api.add({ title, description, dueDate: dueDate || null, isCompleted: false });
+      e.target.reset();
+      await refresh();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('form').addEventListener('submit', onSubmit);
+      document.getElementById('filter').addEventListener('change', refresh);
+      refresh();
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>To-Do List</h1>
+    <select id="filter">
+      <option value="all">Все</option>
+      <option value="todo">Невыполненные</option>
+      <option value="done">Выполненные</option>
+    </select>
+  </header>
+
+  <form id="form">
+    <input id="title" placeholder="Название" required />
+    <input id="description" placeholder="Описание" />
+    <input id="dueDate" type="date" />
+    <button type="submit">Добавить</button>
+  </form>
+
+  <ul id="list"></ul>
+</body>
+</html>
+
+

@@ -1,0 +1,15 @@
+bin/
+obj/
+.vscode/
+*.user
+*.suo
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+*.sln.iml
+*.nupkg
+*.snupkg
+odo.ebpi/AppData/
+odo.ebpi/Properties/launchSettings.json
+
