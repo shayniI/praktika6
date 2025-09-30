@@ -10,8 +10,8 @@ To-Do List (ASP.NET Core Web API + EF Core + SQLite)
 ## Быстрый старт
 1) Клонируйте репозиторий
 ```bash
-git clone <your-repo-url>
-cd <repo-folder>
+git clone https://github.com/shayniI/praktika6
+cd praktika6
 ```
 2) Перейдите в проект и создайте папку для базы данных
 ```bash
