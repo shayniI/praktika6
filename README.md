@@ -60,7 +60,3 @@ CREATE TABLE IF NOT EXISTS Tasks (
 dotnet build odo.ebpi/odo.ebpi.csproj -c Release
 ```
 
-## Лицензия
-MIT
-
-
